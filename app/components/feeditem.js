@@ -2,7 +2,7 @@ import React from 'react';
 import StatusUpdate from './statusupdate';
 import CommentThread from './commentthread';
 import Comment from './comment';
-import {postComment, unlikeFeedItem, likeFeedItem} from '../server.js'
+import {postComment, unlikeFeedItem, likeFeedItem, unlikeComment, likeComment} from '../server.js'
 
 export default class FeedItem extends React.Component {
   constructor(props) {
@@ -46,6 +46,30 @@ export default class FeedItem extends React.Component {
         likeFeedItem(this.state._id, 4, callbackFunction);
       }
     }
+  }
+
+  /**
+   * Triggered when the user clicks on the 'like' or 'unlike' button.
+   */
+  handleCommentLikeClick(didUserLike, commentIndex) {
+      // Callback function for both the like and unlike cases.
+      var callbackFunction = (updatedLikeCounter) => {
+        // setState will overwrite the 'likeCounter' field on the current
+        // state, and will keep the other fields in-tact.
+        // This is called a shallow merge:
+        // https://facebook.github.io/react/docs/component-api.html#setstate
+        var newComments = this.state.comments;
+        newComments[commentIndex].likeCounter = updatedLikeCounter;
+        this.setState({comments: newComments});
+      };
+
+      if (didUserLike) {
+        // User clicked 'unlike' button.
+        unlikeComment(this.state._id, commentIndex, 4, callbackFunction);
+      } else {
+        // User clicked 'like' button.
+        likeComment(this.state._id, commentIndex, 4, callbackFunction);
+      }
   }
 
   /**
@@ -128,7 +152,7 @@ export default class FeedItem extends React.Component {
               data.comments.map((comment, i) => {
                 // i is comment's index in comments array
                 return (
-                  <Comment key={i} author={comment.author} postDate={comment.postDate}>{comment.contents}</Comment>
+                  <Comment key={i} author={comment.author} postDate={comment.postDate} likeCounter={comment.likeCounter} onLikeClick={(didUserLike) => this.handleCommentLikeClick(didUserLike, i)}>{comment.contents}</Comment>
                 );
               })
             }
